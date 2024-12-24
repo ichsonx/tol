@@ -63,6 +63,7 @@ fn main() -> Result<()> {
             let to = std::path::Path::new(output_path);
             // 调用递归遍历函数
             recursive_walk(to, &mode)?;
+            println!("全部拷贝完成！全部拷贝完成！");
         }
         // Commands::Del {
         //     file_path,
