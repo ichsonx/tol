@@ -3,9 +3,9 @@ use std::{fs, path::Path, time::SystemTime};
 use chrono::NaiveDate;
 use clap::{Parser, Subcommand};
 mod dirbydate;
+use anyhow::{Context, Result};
 use dirbydate::*;
 use walkdir::WalkDir;
-use anyhow::{Context, Result};
 
 #[derive(Parser)]
 #[clap(name = "tol", version = "0.1", about = "一个工具集")]
@@ -27,7 +27,6 @@ enum Commands {
         /// 输出路径
         output_path: String,
     },
-
     /*
     /// 删除文件子命令
     Del {
@@ -63,19 +62,18 @@ fn main() -> Result<()> {
             let to = std::path::Path::new(output_path);
             // 调用递归遍历函数
             recursive_walk(to, &mode)?;
-            println!("全部拷贝完成！全部拷贝完成！");
-        }
-        // Commands::Del {
-        //     file_path,
-        //     content,
-        //     date,
-        //     sdate,
-        //     edate,
-        // } => {
-        //     // 将输出路径转换为 Path 对象
-        //     let path = std::path::Path::new(file_path);
-        //     recursive_del(path, content, date, sdate, edate);
-        // }
+            println!("全部拷贝完成！");
+        } // Commands::Del {
+          //     file_path,
+          //     content,
+          //     date,
+          //     sdate,
+          //     edate,
+          // } => {
+          //     // 将输出路径转换为 Path 对象
+          //     let path = std::path::Path::new(file_path);
+          //     recursive_del(path, content, date, sdate, edate);
+          // }
     }
 
     Ok(())

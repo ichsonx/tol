@@ -1,8 +1,9 @@
-use std::{fs, path::Path};
+use std::{fs, path::Path, time::Duration};
 
 use anyhow::{bail, Context, Result};
 use chrono::{DateTime, Local};
 use clap::ValueEnum;
+use indicatif::{ProgressBar, ProgressStyle};
 
 /// 日期模式 enum类型，包含3个值 y,m,d
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord, ValueEnum, Debug)]
@@ -16,6 +17,27 @@ pub enum DateMode {
 }
 
 pub fn recursive_walk(to: &std::path::Path, mode: &DateMode) -> Result<()> {
+    // 计数器，记录当前处理了多少个文件
+    let mut counter = 0;
+    // 进度条，用于显示已经处理了多少个文件，当前正在处理什么文件
+    let pb = ProgressBar::new_spinner();
+    pb.enable_steady_tick(Duration::from_millis(120));
+    pb.set_style(
+        ProgressStyle::with_template("{spinner:.blue} {msg}")
+            .unwrap()
+            // For more spinners check out the cli-spinners project:
+            // https://github.com/sindresorhus/cli-spinners/blob/master/spinners.json
+            .tick_strings(&[
+                "▹▹▹▹▹",
+                "▸▹▹▹▹",
+                "▹▸▹▹▹",
+                "▹▹▸▹▹",
+                "▹▹▹▸▹",
+                "▹▹▹▹▸",
+                "▪▪▪▪▪",
+            ]),
+    );
+    pb.set_message("开始拷贝文件...");
     // for entry in walkdir::WalkDir::new(".")
     //     .into_iter()
     //     .filter_map(|e| e.ok())
@@ -23,6 +45,7 @@ pub fn recursive_walk(to: &std::path::Path, mode: &DateMode) -> Result<()> {
         let entry = entry.unwrap();
         // 判断entry是否文件
         if entry.file_type().is_file() {
+            counter += 1;
             let file_metadata = entry.metadata().unwrap();
             let modified_time = file_metadata.modified().unwrap();
             let datetime: DateTime<Local> = modified_time.into();
@@ -31,12 +54,18 @@ pub fn recursive_walk(to: &std::path::Path, mode: &DateMode) -> Result<()> {
 
             // 拷贝文件到路径为dir_name的目录
             let target_path = Path::new(&dir_name).join(entry.file_name());
-            println!("正在拷贝：{:?} 到： {:?}", &entry.path(), &target_path);
+            // println!("正在拷贝：{:?} 到： {:?}", &entry.path(), &target_path);
+            pb.set_message(format!(
+                "已处理数量：{:?}，正在拷贝：{:?} 到： {:?}",
+                counter,
+                &entry.path(),
+                &target_path
+            ));
             fs::copy(&entry.path(), &target_path)
                 .with_context(|| format!("Failed to copy file : {}", &dir_name))?;
         }
     }
-
+    pb.finish_with_message("Done!");
     Ok(())
 }
 
